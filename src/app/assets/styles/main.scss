@@ -1,0 +1,65 @@
+@import "fonts";
+@import '~bootstrap/scss/bootstrap';
+
+html {
+  font-family: Roboto, sans-serif;
+}
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 10px 20px;
+  width: 700px;
+  margin: 0 auto;
+}
+li{
+  list-style-type: none;
+  border: 2px solid #111111;
+  width: 650px;
+  height: auto;
+  margin: 5px 0;
+  padding: 10px;
+}
+button {
+  outline: none;
+  display: inline-block;
+  padding: 10px 30px;
+  margin: 5px 20px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif; 
+  color: #111111;
+  background: #ffffff;
+  transition: .2s ease-in-out;
+}
+button:before {
+  content: "";
+  background: linear-gradient(90deg, rgba(255,255,255,.1), rgba(255,255,255,.5));
+  height: 50px;
+  width: 50px;
+  position: absolute;
+  top: -8px;
+  left: -75px;
+  transform: skewX(-45deg);
+}
+button:hover {
+  border: 2px solid #fe6637;
+  background: #fe6637;
+  color: #fff;
+}
+button:hover:before {
+  left: 150px;
+  transition: .5s ease-in-out;
+}
+li:hover{
+  border: 2px solid #fe6637;
+}
