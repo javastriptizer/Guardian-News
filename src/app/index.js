@@ -1,31 +1,85 @@
+import $ from 'jquery';
 import './assets/styles/main.scss';
-import guardianApi from './api';
+import Pagination from './pagination';
+import { getNewsItem, searchNews } from './request';
+import Loader from './loader';
 
-const btnRefresh = document.querySelector('.refresh');
-const newsList = document.querySelector('.news');
+const refreshBtn = $('#refresh_btn');
+const newsList = $('#news_list');
+const newsWrap = $('.news-wrap');
 
-async function searchNews(query = '') {
-  const response = await guardianApi.get(`/search?q=${query}`);
-
-  return response.results;
-}
+const loader = new Loader(newsWrap[0]);
 
 function renderNews(news) {
   return news
-    .map(({ webTitle }) => `<li class="news-list_item">${webTitle}</li>`)
+    .map(({ webTitle, id, webUrl }) => `
+      <li class="news-list__item" data-id="${id}" data-url="${webUrl}">
+        <div class="news-list__header">
+          <h4 class="news-list__title">${webTitle}</h4>
+          <span class="news-list__header-icon">&#10095;</span>
+        </div>
+      </li>
+    `)
     .join('');
 }
 
-async function displayNews() {
-  try {
-    const news = await searchNews();
+async function displayNews(page = 1) {
+  loader.start();
 
-    newsList.innerHTML = renderNews(news);
+  try {
+    const { currentPage, pages, results } = await searchNews(page);
+
+    newsList.html(renderNews(results));
+
+    return { currentPage, pages };
   } catch (e) {
-    newsList.innerHTML = `<div class="error">${e.message}</div>`;
+    newsList.html(`<div class="error">${e.message}</div>`);
+
+    return { currentPage: 1, pages: 1 };
+  } finally {
+    loader.stop();
   }
 }
 
-displayNews();
+(async function () {
+  const { currentPage, pages } = await displayNews();
 
-btnRefresh.addEventListener('click', () => displayNews());
+  const pagination = new Pagination(currentPage, pages, newsWrap[0]);
+  pagination.onChange = (page) => displayNews(page);
+
+  console.log(pagination);
+  $('.news-list').on('click', async (e) => {
+    const newsItem = e.target.closest('.news-list__item');
+    const newsLink = e.target.closest('.news-body__link');
+
+    if (!newsItem || newsLink) {
+      return;
+    }
+
+    newsItem.classList.toggle('is-active');
+
+    const newsBody = $(newsItem).find('.news-body')[0];
+
+    if (newsBody) {
+      $(newsBody).slideToggle();
+      return;
+    }
+
+    const { id, url } = newsItem.dataset;
+
+    const response = await getNewsItem(id);
+    const { body } = response.fields;
+
+    newsItem.insertAdjacentHTML('beforeend', `
+      <div class="news-body" style="display: none;">
+        <div class="news-body__main">${body}</div>
+        <a class="news-body__link" href="${url}" target="_blank">Read full news</a>
+      </div>
+    `);
+
+    const addedBody = $(newsItem).find('.news-body')[0];
+    $(addedBody).slideDown();
+  });
+
+  refreshBtn.on('click', () => displayNews());
+}());
